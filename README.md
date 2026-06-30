@@ -15,4 +15,4 @@ A web-based trading card creator. Design custom cards with images, stats, and po
 
 1. Push this repo to GitHub
 2. In the Cloudflare dashboard, create a new Pages project linked to the repo
-3. No build step needed — set the output directory to `/` (root)
+3. No build step needed — set the output directory to `dist`
