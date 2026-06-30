@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Generator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Card Generator</h1>
+      <div class="header-actions">
+        <button id="btn-print" onclick="openPrintView()">Print Cards</button>
+      </div>
+    </header>
+
+    <main>
+      <aside id="card-list-panel">
+        <div class="panel-header">
+          <h2>Cards</h2>
+          <button id="btn-add-card" onclick="addCard()">+ New Card</button>
+        </div>
+        <div id="card-list"></div>
+      </aside>
+
+      <section id="preview-panel">
+        <h2>Preview</h2>
+        <div id="card-preview-container">
+          <div id="card-preview" class="card-face card-front">
+            <div class="card-inner">
+              <div class="card-header-bar">
+                <span class="card-name-display">Card Name</span>
+                <span class="card-rarity-display">common</span>
+              </div>
+              <div class="card-image-area">
+                <span class="placeholder-text">No Image</span>
+              </div>
+              <div class="card-type-bar">
+                <span class="card-type-display">Type</span>
+              </div>
+              <div class="card-stats">
+                <div class="stat-row">
+                  <span class="stat-label">Weakness:</span>
+                  <span class="card-weakness-display">—</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">Strength:</span>
+                  <span class="card-strength-display">—</span>
+                </div>
+                <div class="card-powers">
+                  <div class="power-row"><span class="power-name">—</span><span class="power-value">0</span></div>
+                  <div class="power-row"><span class="power-name">—</span><span class="power-value">0</span></div>
+                  <div class="power-row"><span class="power-name">—</span><span class="power-value">0</span></div>
+                  <div class="power-row"><span class="power-name">—</span><span class="power-value">0</span></div>
+                </div>
+                <div class="stat-row help-row">
+                  <span class="stat-label">Help:</span>
+                  <span class="card-help-display">100%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="back-preview-container" style="display:none">
+          <h3>Card Back</h3>
+          <div id="back-preview" class="card-face card-back">
+            <div class="card-back-inner">
+              <span class="placeholder-text">No Back Design</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="editor-panel">
+        <h2>Edit Card</h2>
+        <div id="editor-empty">
+          <p>Select a card or create a new one to start editing.</p>
+        </div>
+        <form id="card-editor" style="display:none" onsubmit="return false">
+          <fieldset>
+            <legend>Basic Info</legend>
+            <label>
+              Card Name
+              <input type="text" id="field-name" oninput="updateField('name', this.value)">
+            </label>
+            <label>
+              Rarity
+              <select id="field-rarity" onchange="updateField('rarity', this.value)">
+                <option value="common">Common</option>
+                <option value="uncommon">Uncommon</option>
+                <option value="rare">Rare</option>
+                <option value="epic">Epic</option>
+                <option value="legendary">Legendary</option>
+              </select>
+            </label>
+            <label>
+              Type
+              <input type="text" id="field-type" oninput="updateField('type', this.value)">
+            </label>
+            <label>
+              Card Color
+              <input type="color" id="field-color" value="#3b82f6" onchange="updateField('color', this.value)">
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Card Image</legend>
+            <div id="image-upload-area" onclick="document.getElementById('field-image').click()">
+              <input type="file" id="field-image" accept="image/*" onchange="handleImageUpload(this)" hidden>
+              <p>Click or drag an image here</p>
+            </div>
+            <button type="button" class="btn-small btn-danger" id="btn-remove-image" onclick="removeImage()" style="display:none">Remove Image</button>
+          </fieldset>
+
+          <fieldset>
+            <legend>Stats</legend>
+            <label>
+              Weakness
+              <input type="text" id="field-weakness" oninput="updateField('weakness', this.value)">
+            </label>
+            <label>
+              Strength
+              <input type="text" id="field-strength" oninput="updateField('strength', this.value)">
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Powers</legend>
+            <div class="power-input-row">
+              <input type="text" id="field-power1-name" placeholder="Power name" oninput="updatePower(0, 'name', this.value)">
+              <input type="number" id="field-power1-value" placeholder="0" min="0" max="999" oninput="updatePower(0, 'value', this.value)">
+            </div>
+            <div class="power-input-row">
+              <input type="text" id="field-power2-name" placeholder="Power name" oninput="updatePower(1, 'name', this.value)">
+              <input type="number" id="field-power2-value" placeholder="0" min="0" max="999" oninput="updatePower(1, 'value', this.value)">
+            </div>
+            <div class="power-input-row">
+              <input type="text" id="field-power3-name" placeholder="Power name" oninput="updatePower(2, 'name', this.value)">
+              <input type="number" id="field-power3-value" placeholder="0" min="0" max="999" oninput="updatePower(2, 'value', this.value)">
+            </div>
+            <div class="power-input-row">
+              <input type="text" id="field-power4-name" placeholder="Power name" oninput="updatePower(3, 'name', this.value)">
+              <input type="number" id="field-power4-value" placeholder="0" min="0" max="999" oninput="updatePower(3, 'value', this.value)">
+            </div>
+            <label>
+              Help %
+              <input type="number" id="field-help" placeholder="100" min="0" max="9999" oninput="updateField('help', this.value)">
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Print Settings</legend>
+            <label>
+              Number of copies
+              <input type="number" id="field-copies" value="1" min="1" max="100" onchange="updateField('copies', parseInt(this.value))">
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Card Back</legend>
+            <div id="back-upload-area" onclick="document.getElementById('field-back-image').click()">
+              <input type="file" id="field-back-image" accept="image/*" onchange="handleBackImageUpload(this)" hidden>
+              <p>Click or drag a back image here</p>
+            </div>
+            <button type="button" class="btn-small btn-danger" id="btn-remove-back" onclick="removeBackImage()" style="display:none">Remove Back</button>
+            <label>
+              Back Color
+              <input type="color" id="field-back-color" value="#1e3a5f" onchange="updateField('backColor', this.value)">
+            </label>
+            <label>
+              Back Text
+              <input type="text" id="field-back-text" placeholder="Card back text" oninput="updateField('backText', this.value)">
+            </label>
+          </fieldset>
+
+          <div class="editor-actions">
+            <button type="button" class="btn-danger" onclick="deleteCurrentCard()">Delete Card</button>
+            <button type="button" onclick="duplicateCurrentCard()">Duplicate Card</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <div id="print-overlay" style="display:none">
+    <div class="print-controls no-print">
+      <button onclick="window.print()">Print / Save PDF</button>
+      <button onclick="closePrintView()">Close</button>
+    </div>
+    <div id="print-pages"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
