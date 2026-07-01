@@ -48,22 +48,17 @@
                   <span class="stat-label">Strength:</span>
                   <span class="card-strength-display">—</span>
                 </div>
-                <div class="card-powers">
-                  <div class="power-row"><span class="power-name">—</span><span class="power-value">0</span></div>
-                  <div class="power-row"><span class="power-name">—</span><span class="power-value">0</span></div>
-                  <div class="power-row"><span class="power-name">—</span><span class="power-value">0</span></div>
-                  <div class="power-row"><span class="power-name">—</span><span class="power-value">0</span></div>
-                </div>
+                <div class="card-powers"></div>
                 <div class="stat-row help-row">
-                  <span class="stat-label">Help:</span>
-                  <span class="card-help-display">100%</span>
+                  <span class="stat-label">Health:</span>
+                  <span class="card-help-display">100</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div id="back-preview-container" style="display:none">
-          <h3>Card Back</h3>
+        <div id="back-preview-container">
+          <h3>Card Back (shared by all cards)</h3>
           <div id="back-preview" class="card-face card-back">
             <div class="card-back-inner">
               <span class="placeholder-text">No Back Design</span>
@@ -144,8 +139,8 @@
               <input type="number" id="field-power4-value" placeholder="0" min="0" max="999" oninput="updatePower(3, 'value', this.value)">
             </div>
             <label>
-              Help %
-              <input type="number" id="field-help" placeholder="100" min="0" max="9999" oninput="updateField('help', this.value)">
+              Health
+              <input type="number" id="field-health" placeholder="100" min="0" max="9999" oninput="updateField('health', this.value)">
             </label>
           </fieldset>
 
@@ -157,8 +152,17 @@
             </label>
           </fieldset>
 
+          <div class="editor-actions">
+            <button type="button" class="btn-danger" onclick="deleteCurrentCard()">Delete Card</button>
+            <button type="button" onclick="duplicateCurrentCard()">Duplicate Card</button>
+          </div>
+        </form>
+
+        <div id="shared-back-editor">
+          <h2>Card Back</h2>
+          <p class="hint">One shared back is printed for every card.</p>
           <fieldset>
-            <legend>Card Back</legend>
+            <legend>Back Design</legend>
             <div id="back-upload-area" onclick="document.getElementById('field-back-image').click()">
               <input type="file" id="field-back-image" accept="image/*" onchange="handleBackImageUpload(this)" hidden>
               <p>Click or drag a back image here</p>
@@ -166,19 +170,14 @@
             <button type="button" class="btn-small btn-danger" id="btn-remove-back" onclick="removeBackImage()" style="display:none">Remove Back</button>
             <label>
               Back Color
-              <input type="color" id="field-back-color" value="#1e3a5f" onchange="updateField('backColor', this.value)">
+              <input type="color" id="field-back-color" value="#1e3a5f" onchange="updateBack('color', this.value)">
             </label>
             <label>
               Back Text
-              <input type="text" id="field-back-text" placeholder="Card back text" oninput="updateField('backText', this.value)">
+              <input type="text" id="field-back-text" placeholder="Card back text" oninput="updateBack('text', this.value)">
             </label>
           </fieldset>
-
-          <div class="editor-actions">
-            <button type="button" class="btn-danger" onclick="deleteCurrentCard()">Delete Card</button>
-            <button type="button" onclick="duplicateCurrentCard()">Duplicate Card</button>
-          </div>
-        </form>
+        </div>
       </section>
     </main>
   </div>

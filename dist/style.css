@@ -430,16 +430,50 @@ main {
 .power-input-row {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
+  align-items: stretch;
 }
 
-.power-input-row input[type="text"] {
+#card-editor .power-input-row input[type="text"] {
   flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.6rem;
+  font-size: 0.9rem;
 }
 
-.power-input-row input[type="number"] {
-  width: 70px;
-  flex-shrink: 0;
+#card-editor .power-input-row input[type="number"] {
+  width: 68px;
+  flex: 0 0 68px;
+  text-align: center;
+  padding: 0.55rem 0.4rem;
+  font-size: 0.9rem;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Drop the spinner so three digits fit comfortably. */
+.power-input-row input[type="number"]::-webkit-inner-spin-button,
+.power-input-row input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#shared-back-editor {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+#shared-back-editor h2 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+#shared-back-editor .hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
 }
 
 .editor-actions {

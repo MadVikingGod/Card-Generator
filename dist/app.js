@@ -1,9 +1,10 @@
 const STORAGE_KEY = 'card-generator-cards';
-const BACK_STORAGE_KEY = 'card-generator-backs';
+const BACK_STORAGE_KEY = 'card-generator-back';
 
 let cards = [];
 let selectedCardId = null;
-let cardBacks = {};
+// One shared card back used by every card.
+let cardBack = { image: null, color: '#1e3a5f', text: '' };
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -25,27 +26,27 @@ function createDefaultCard() {
       { name: '', value: 0 },
       { name: '', value: 0 },
     ],
-    help: 100,
+    health: 100,
     copies: 1,
-    backImage: null,
-    backColor: '#1e3a5f',
-    backText: '',
   };
 }
 
 function saveCards() {
-  const saveData = cards.map(c => ({
-    ...c,
-    image: c.image ? c.image.substring(0, 500000) : null,
-    backImage: c.backImage ? c.backImage.substring(0, 500000) : null,
-  }));
-
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
   } catch (e) {
     console.warn('Storage full, saving without images');
-    const lite = cards.map(c => ({ ...c, image: null, backImage: null }));
+    const lite = cards.map(c => ({ ...c, image: null }));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lite));
+  }
+}
+
+function saveBack() {
+  try {
+    localStorage.setItem(BACK_STORAGE_KEY, JSON.stringify(cardBack));
+  } catch (e) {
+    console.warn('Storage full, saving back without image');
+    localStorage.setItem(BACK_STORAGE_KEY, JSON.stringify({ ...cardBack, image: null }));
   }
 }
 
@@ -56,14 +57,36 @@ function loadCards() {
       cards = JSON.parse(data);
       cards.forEach(c => {
         if (!c.powers) c.powers = [{ name: '', value: 0 }, { name: '', value: 0 }, { name: '', value: 0 }, { name: '', value: 0 }];
-        if (c.help === undefined) c.help = 100;
+        // Migrate legacy "help" field to "health"
+        if (c.health === undefined) c.health = c.help !== undefined ? c.help : 100;
+        delete c.help;
         if (c.copies === undefined) c.copies = 1;
-        if (c.backColor === undefined) c.backColor = '#1e3a5f';
-        if (c.backText === undefined) c.backText = '';
       });
     }
   } catch (e) {
     console.warn('Failed to load cards', e);
+  }
+}
+
+function loadBack() {
+  try {
+    const data = localStorage.getItem(BACK_STORAGE_KEY);
+    if (data) {
+      cardBack = JSON.parse(data);
+      return;
+    }
+    // Migrate: seed the shared back from the first legacy card that had one.
+    const legacy = cards.find(c => c.backImage || c.backText);
+    if (legacy) {
+      cardBack = {
+        image: legacy.backImage || null,
+        color: legacy.backColor || '#1e3a5f',
+        text: legacy.backText || '',
+      };
+    }
+    cards.forEach(c => { delete c.backImage; delete c.backColor; delete c.backText; });
+  } catch (e) {
+    console.warn('Failed to load card back', e);
   }
 }
 
@@ -99,7 +122,6 @@ function selectCard(id) {
 
   document.getElementById('editor-empty').style.display = 'none';
   document.getElementById('card-editor').style.display = 'block';
-  document.getElementById('back-preview-container').style.display = 'block';
 
   document.getElementById('field-name').value = card.name;
   document.getElementById('field-rarity').value = card.rarity;
@@ -107,14 +129,12 @@ function selectCard(id) {
   document.getElementById('field-color').value = card.color;
   document.getElementById('field-weakness').value = card.weakness;
   document.getElementById('field-strength').value = card.strength;
-  document.getElementById('field-help').value = card.help;
+  document.getElementById('field-health').value = card.health;
   document.getElementById('field-copies').value = card.copies;
-  document.getElementById('field-back-color').value = card.backColor;
-  document.getElementById('field-back-text').value = card.backText;
 
   for (let i = 0; i < 4; i++) {
     document.getElementById(`field-power${i + 1}-name`).value = card.powers[i].name;
-    document.getElementById(`field-power${i + 1}-value`).value = card.powers[i].value;
+    document.getElementById(`field-power${i + 1}-value`).value = card.powers[i].value || '';
   }
 
   const uploadArea = document.getElementById('image-upload-area');
@@ -129,10 +149,22 @@ function selectCard(id) {
     removeBtn.style.display = 'none';
   }
 
+  renderPreview(card);
+}
+
+function renderPreview(card) {
+  const preview = document.getElementById('card-preview');
+  preview.innerHTML = renderCardFrontHTML(card);
+}
+
+function renderBackEditor() {
+  document.getElementById('field-back-color').value = cardBack.color;
+  document.getElementById('field-back-text').value = cardBack.text || '';
+
   const backArea = document.getElementById('back-upload-area');
   const removeBackBtn = document.getElementById('btn-remove-back');
-  if (card.backImage) {
-    backArea.innerHTML = `<input type="file" id="field-back-image" accept="image/*" onchange="handleBackImageUpload(this)" hidden><img src="${card.backImage}" alt="Back image">`;
+  if (cardBack.image) {
+    backArea.innerHTML = `<input type="file" id="field-back-image" accept="image/*" onchange="handleBackImageUpload(this)" hidden><img src="${cardBack.image}" alt="Back image">`;
     backArea.classList.add('has-image');
     removeBackBtn.style.display = '';
   } else {
@@ -140,17 +172,10 @@ function selectCard(id) {
     backArea.classList.remove('has-image');
     removeBackBtn.style.display = 'none';
   }
-
-  renderPreview(card);
 }
 
-function renderPreview(card) {
-  const preview = document.getElementById('card-preview');
-  preview.innerHTML = renderCardFrontHTML(card);
-  preview.querySelector('.card-inner').style.background = hexToGradient(card.color);
-
-  const backPreview = document.getElementById('back-preview');
-  backPreview.innerHTML = renderCardBackHTML(card);
+function renderBackPreview() {
+  document.getElementById('back-preview').innerHTML = renderCardBackHTML();
 }
 
 function hexToGradient(hex) {
@@ -167,9 +192,12 @@ function renderCardFrontHTML(card) {
     ? `<img src="${card.image}" alt="${escapeHtml(card.name)}">`
     : '<span class="placeholder-text">No Image</span>';
 
-  const powersHTML = card.powers.map(p =>
-    `<div class="power-row"><span class="power-name">${escapeHtml(p.name || '—')}</span><span class="power-value">${p.value || 0}</span></div>`
-  ).join('');
+  // Only show powers that have been filled in (a name or a non-zero value).
+  const powersHTML = card.powers
+    .filter(p => (p.name && p.name.trim()) || (p.value && p.value > 0))
+    .map(p =>
+      `<div class="power-row"><span class="power-name">${escapeHtml(p.name || '')}</span><span class="power-value">${p.value || 0}</span></div>`
+    ).join('');
 
   return `
     <div class="card-inner" style="background:${hexToGradient(card.color)}">
@@ -196,19 +224,19 @@ function renderCardFrontHTML(card) {
           ${powersHTML}
         </div>
         <div class="stat-row help-row">
-          <span class="stat-label">Help:</span>
-          <span>${card.help || 100}%</span>
+          <span class="stat-label">Health:</span>
+          <span>${card.health || 100}</span>
         </div>
       </div>
     </div>
   `;
 }
 
-function renderCardBackHTML(card) {
-  if (card.backImage) {
-    return `<div class="card-back-inner" style="background:${card.backColor}"><img src="${card.backImage}" alt="Card back"></div>`;
+function renderCardBackHTML() {
+  if (cardBack.image) {
+    return `<div class="card-back-inner" style="background:${cardBack.color}"><img src="${cardBack.image}" alt="Card back"></div>`;
   }
-  return `<div class="card-back-inner" style="background:${card.backColor}">${escapeHtml(card.backText || '')}</div>`;
+  return `<div class="card-back-inner" style="background:${cardBack.color}">${escapeHtml(cardBack.text || '')}</div>`;
 }
 
 function updateField(field, value) {
@@ -227,6 +255,12 @@ function updatePower(index, prop, value) {
   card.powers[index][prop] = value;
   renderPreview(card);
   saveCards();
+}
+
+function updateBack(field, value) {
+  cardBack[field] = value;
+  renderBackPreview();
+  saveBack();
 }
 
 function handleImageUpload(input) {
@@ -248,11 +282,10 @@ function handleBackImageUpload(input) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    const card = cards.find(c => c.id === selectedCardId);
-    if (!card) return;
-    card.backImage = e.target.result;
-    selectCard(card.id);
-    saveCards();
+    cardBack.image = e.target.result;
+    renderBackEditor();
+    renderBackPreview();
+    saveBack();
   };
   reader.readAsDataURL(file);
 }
@@ -266,11 +299,10 @@ function removeImage() {
 }
 
 function removeBackImage() {
-  const card = cards.find(c => c.id === selectedCardId);
-  if (!card) return;
-  card.backImage = null;
-  selectCard(card.id);
-  saveCards();
+  cardBack.image = null;
+  renderBackEditor();
+  renderBackPreview();
+  saveBack();
 }
 
 function addCard() {
@@ -291,7 +323,6 @@ function deleteCurrentCard() {
   } else {
     document.getElementById('editor-empty').style.display = '';
     document.getElementById('card-editor').style.display = 'none';
-    document.getElementById('back-preview-container').style.display = 'none';
     document.getElementById('card-preview').innerHTML = `
       <div class="card-inner">
         <div class="card-header-bar">
@@ -303,13 +334,8 @@ function deleteCurrentCard() {
         <div class="card-stats">
           <div class="stat-row"><span class="stat-label">Weakness:</span><span>—</span></div>
           <div class="stat-row"><span class="stat-label">Strength:</span><span>—</span></div>
-          <div class="card-powers">
-            <div class="power-row"><span class="power-name">—</span><span class="power-value">0</span></div>
-            <div class="power-row"><span class="power-name">—</span><span class="power-value">0</span></div>
-            <div class="power-row"><span class="power-name">—</span><span class="power-value">0</span></div>
-            <div class="power-row"><span class="power-name">—</span><span class="power-value">0</span></div>
-          </div>
-          <div class="stat-row help-row"><span class="stat-label">Help:</span><span>100%</span></div>
+          <div class="card-powers"></div>
+          <div class="stat-row help-row"><span class="stat-label">Health:</span><span>100</span></div>
         </div>
       </div>`;
   }
@@ -366,10 +392,9 @@ function openPrintView() {
     }
     pages.appendChild(frontPage);
 
-    // Back page — same cards in reverse column order for double-sided printing
-    // When flipped on the long edge, column order reverses:
-    // Front: [1][2][3]  →  Back (rotated 180°): [3][2][1]
-    //        [4][5][6]              [6][5][4]
+    // Back page — the shared back, positioned to mirror the fronts for
+    // double-sided printing. When flipped on the long edge, column order
+    // reverses, so a slot with a front gets a back at its mirrored position.
     const backPage = document.createElement('div');
     backPage.className = 'print-page back-page';
 
@@ -378,7 +403,7 @@ function openPrintView() {
       const cardEl = document.createElement('div');
       cardEl.className = 'card-face card-back';
       if (card) {
-        cardEl.innerHTML = renderCardBackHTML(card);
+        cardEl.innerHTML = renderCardBackHTML();
       } else {
         cardEl.style.visibility = 'hidden';
       }
@@ -418,40 +443,49 @@ function closePrintView() {
 
 // Drag and drop support
 function setupDragDrop() {
-  ['image-upload-area', 'back-upload-area'].forEach(id => {
-    const area = document.getElementById(id);
-    area.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      area.classList.add('drag-over');
-    });
-    area.addEventListener('dragleave', () => {
-      area.classList.remove('drag-over');
-    });
-    area.addEventListener('drop', (e) => {
-      e.preventDefault();
-      area.classList.remove('drag-over');
-      const file = e.dataTransfer.files[0];
-      if (!file || !file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const card = cards.find(c => c.id === selectedCardId);
-        if (!card) return;
-        if (id === 'image-upload-area') {
-          card.image = ev.target.result;
-        } else {
-          card.backImage = ev.target.result;
-        }
-        selectCard(card.id);
-        saveCards();
-      };
-      reader.readAsDataURL(file);
-    });
+  const imgArea = document.getElementById('image-upload-area');
+  attachDrop(imgArea, (result) => {
+    const card = cards.find(c => c.id === selectedCardId);
+    if (!card) return;
+    card.image = result;
+    selectCard(card.id);
+    saveCards();
+  });
+
+  const backArea = document.getElementById('back-upload-area');
+  attachDrop(backArea, (result) => {
+    cardBack.image = result;
+    renderBackEditor();
+    renderBackPreview();
+    saveBack();
+  });
+}
+
+function attachDrop(area, onImage) {
+  area.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    area.classList.add('drag-over');
+  });
+  area.addEventListener('dragleave', () => {
+    area.classList.remove('drag-over');
+  });
+  area.addEventListener('drop', (e) => {
+    e.preventDefault();
+    area.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => onImage(ev.target.result);
+    reader.readAsDataURL(file);
   });
 }
 
 // Init
 loadCards();
+loadBack();
 renderCardList();
+renderBackEditor();
+renderBackPreview();
 if (cards.length > 0) {
   selectCard(cards[0].id);
 }
