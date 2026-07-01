@@ -139,7 +139,7 @@ main {
   height: 32px;
   border-radius: 3px;
   flex-shrink: 0;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .card-list-item .card-list-info {
@@ -169,7 +169,8 @@ main {
   gap: 1.5rem;
 }
 
-#preview-panel h2, #preview-panel h3 {
+#preview-panel h2,
+#preview-panel h3 {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -181,7 +182,7 @@ main {
   height: var(--card-height);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   position: relative;
   flex-shrink: 0;
 }
@@ -216,24 +217,34 @@ main {
   font-size: 0.55rem;
   padding: 1px 6px;
   border-radius: 3px;
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   flex-shrink: 0;
 }
 
-.card-rarity-display[data-rarity="common"] { background: #6b7280; }
-.card-rarity-display[data-rarity="uncommon"] { background: #059669; }
-.card-rarity-display[data-rarity="rare"] { background: #2563eb; }
-.card-rarity-display[data-rarity="epic"] { background: #7c3aed; }
-.card-rarity-display[data-rarity="legendary"] { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+.card-rarity-display[data-rarity='common'] {
+  background: #6b7280;
+}
+.card-rarity-display[data-rarity='uncommon'] {
+  background: #059669;
+}
+.card-rarity-display[data-rarity='rare'] {
+  background: #2563eb;
+}
+.card-rarity-display[data-rarity='epic'] {
+  background: #7c3aed;
+}
+.card-rarity-display[data-rarity='legendary'] {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+}
 
 .card-image-area {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0, 0, 0, 0.3);
   margin: 0 4px;
   border-radius: 4px;
   overflow: hidden;
@@ -247,7 +258,7 @@ main {
 }
 
 .placeholder-text {
-  color: rgba(255,255,255,0.3);
+  color: rgba(255, 255, 255, 0.3);
   font-size: 0.7rem;
 }
 
@@ -287,7 +298,7 @@ main {
   display: flex;
   justify-content: space-between;
   padding: 1px 4px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 2px;
 }
 
@@ -350,14 +361,16 @@ main {
   font-size: 0.9rem;
 }
 
-#card-editor fieldset {
+#card-editor fieldset,
+#back-editor fieldset {
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0.75rem;
   margin-bottom: 0.75rem;
 }
 
-#card-editor legend {
+#card-editor legend,
+#back-editor legend {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -366,16 +379,20 @@ main {
   padding: 0 0.25rem;
 }
 
-#card-editor label {
+#card-editor label,
+#back-editor label {
   display: block;
   font-size: 0.8rem;
   margin-bottom: 0.5rem;
   color: var(--text-muted);
 }
 
-#card-editor input[type="text"],
-#card-editor input[type="number"],
-#card-editor select {
+#card-editor input[type='text'],
+#card-editor input[type='number'],
+#card-editor select,
+#back-editor input[type='text'],
+#back-editor input[type='number'],
+#back-editor select {
   display: block;
   width: 100%;
   padding: 0.4rem 0.5rem;
@@ -387,7 +404,8 @@ main {
   font-size: 0.85rem;
 }
 
-#card-editor input[type="color"] {
+#card-editor input[type='color'],
+#back-editor input[type='color'] {
   display: block;
   width: 100%;
   height: 32px;
@@ -399,7 +417,8 @@ main {
   padding: 2px;
 }
 
-#image-upload-area, #back-upload-area {
+#image-upload-area,
+#back-upload-area {
   border: 2px dashed var(--border);
   border-radius: 6px;
   padding: 1.5rem;
@@ -407,21 +426,26 @@ main {
   cursor: pointer;
   color: var(--text-muted);
   font-size: 0.8rem;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
-#image-upload-area:hover, #back-upload-area:hover {
+#image-upload-area:hover,
+#back-upload-area:hover {
   border-color: var(--accent);
-  background: rgba(59,130,246,0.05);
+  background: rgba(59, 130, 246, 0.05);
 }
 
-#image-upload-area.has-image, #back-upload-area.has-image {
+#image-upload-area.has-image,
+#back-upload-area.has-image {
   border-style: solid;
   border-color: var(--accent);
   padding: 0.5rem;
 }
 
-#image-upload-area.has-image img, #back-upload-area.has-image img {
+#image-upload-area.has-image img,
+#back-upload-area.has-image img {
   max-width: 100%;
   max-height: 100px;
   border-radius: 4px;
@@ -430,16 +454,46 @@ main {
 .power-input-row {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
+  align-items: stretch;
 }
 
-.power-input-row input[type="text"] {
+#card-editor .power-input-row input[type='text'] {
   flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.6rem;
+  font-size: 0.9rem;
 }
 
-.power-input-row input[type="number"] {
-  width: 70px;
-  flex-shrink: 0;
+#card-editor .power-input-row input[type='number'] {
+  width: 68px;
+  flex: 0 0 68px;
+  text-align: center;
+  padding: 0.55rem 0.4rem;
+  font-size: 0.9rem;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Drop the spinner so three digits fit comfortably. */
+.power-input-row input[type='number']::-webkit-inner-spin-button,
+.power-input-row input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#back-editor .hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+/* Special "Card Back" entry in the card list */
+.card-list-item.back-item {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  border-radius: 6px 6px 0 0;
 }
 
 .editor-actions {
@@ -542,7 +596,7 @@ main {
 /* Drag and drop highlight */
 .drag-over {
   border-color: var(--accent) !important;
-  background: rgba(59,130,246,0.1) !important;
+  background: rgba(59, 130, 246, 0.1) !important;
 }
 
 /* Scrollbar styling */
