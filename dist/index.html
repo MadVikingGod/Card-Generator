@@ -57,8 +57,7 @@
             </div>
           </div>
         </div>
-        <div id="back-preview-container">
-          <h3>Card Back (shared by all cards)</h3>
+        <div id="back-preview-container" style="display:none">
           <div id="back-preview" class="card-face card-back">
             <div class="card-back-inner">
               <span class="placeholder-text">No Back Design</span>
@@ -68,7 +67,7 @@
       </section>
 
       <section id="editor-panel">
-        <h2>Edit Card</h2>
+        <h2 id="editor-title">Edit Card</h2>
         <div id="editor-empty">
           <p>Select a card or create a new one to start editing.</p>
         </div>
@@ -158,9 +157,8 @@
           </div>
         </form>
 
-        <div id="shared-back-editor">
-          <h2>Card Back</h2>
-          <p class="hint">One shared back is printed for every card.</p>
+        <form id="back-editor" style="display:none" onsubmit="return false">
+          <p class="hint">This back is printed behind every card.</p>
           <fieldset>
             <legend>Back Design</legend>
             <div id="back-upload-area" onclick="document.getElementById('field-back-image').click()">
@@ -172,12 +170,8 @@
               Back Color
               <input type="color" id="field-back-color" value="#1e3a5f" onchange="updateBack('color', this.value)">
             </label>
-            <label>
-              Back Text
-              <input type="text" id="field-back-text" placeholder="Card back text" oninput="updateBack('text', this.value)">
-            </label>
           </fieldset>
-        </div>
+        </form>
       </section>
     </main>
   </div>

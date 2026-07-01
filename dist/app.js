@@ -1,10 +1,12 @@
 const STORAGE_KEY = 'card-generator-cards';
 const BACK_STORAGE_KEY = 'card-generator-back';
+// Sentinel id for the shared card back, shown as a special item in the list.
+const BACK_ID = '__back__';
 
 let cards = [];
 let selectedCardId = null;
-// One shared card back used by every card.
-let cardBack = { image: null, color: '#1e3a5f', text: '' };
+// One shared card back used by every card (color + optional image).
+let cardBack = { image: null, color: '#1e3a5f' };
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -73,15 +75,15 @@ function loadBack() {
     const data = localStorage.getItem(BACK_STORAGE_KEY);
     if (data) {
       cardBack = JSON.parse(data);
+      delete cardBack.text; // drop legacy back text
       return;
     }
     // Migrate: seed the shared back from the first legacy card that had one.
-    const legacy = cards.find(c => c.backImage || c.backText);
+    const legacy = cards.find(c => c.backImage || c.backColor);
     if (legacy) {
       cardBack = {
         image: legacy.backImage || null,
         color: legacy.backColor || '#1e3a5f',
-        text: legacy.backText || '',
       };
     }
     cards.forEach(c => { delete c.backImage; delete c.backColor; delete c.backText; });
@@ -93,6 +95,23 @@ function loadBack() {
 function renderCardList() {
   const list = document.getElementById('card-list');
   list.innerHTML = '';
+
+  // Special item for the shared card back.
+  const backItem = document.createElement('div');
+  backItem.className = 'card-list-item back-item' + (selectedCardId === BACK_ID ? ' active' : '');
+  backItem.onclick = () => selectBack();
+  const backSwatch = cardBack.image
+    ? `background-image:url(${cardBack.image});background-size:cover;background-position:center`
+    : `background:${cardBack.color}`;
+  backItem.innerHTML = `
+    <div class="card-swatch" style="${backSwatch}"></div>
+    <div class="card-list-info">
+      <div class="card-list-name">Card Back</div>
+      <div class="card-list-meta">shared by all cards</div>
+    </div>
+  `;
+  list.appendChild(backItem);
+
   cards.forEach(card => {
     const item = document.createElement('div');
     item.className = 'card-list-item' + (card.id === selectedCardId ? ' active' : '');
@@ -114,6 +133,19 @@ function escapeHtml(str) {
   return d.innerHTML;
 }
 
+function selectBack() {
+  selectedCardId = BACK_ID;
+  renderCardList();
+  document.getElementById('editor-empty').style.display = 'none';
+  document.getElementById('card-editor').style.display = 'none';
+  document.getElementById('back-editor').style.display = 'block';
+  document.getElementById('editor-title').textContent = 'Edit Card Back';
+  document.getElementById('card-preview-container').style.display = 'none';
+  document.getElementById('back-preview-container').style.display = '';
+  renderBackEditor();
+  renderBackPreview();
+}
+
 function selectCard(id) {
   selectedCardId = id;
   renderCardList();
@@ -122,6 +154,10 @@ function selectCard(id) {
 
   document.getElementById('editor-empty').style.display = 'none';
   document.getElementById('card-editor').style.display = 'block';
+  document.getElementById('back-editor').style.display = 'none';
+  document.getElementById('editor-title').textContent = 'Edit Card';
+  document.getElementById('card-preview-container').style.display = '';
+  document.getElementById('back-preview-container').style.display = 'none';
 
   document.getElementById('field-name').value = card.name;
   document.getElementById('field-rarity').value = card.rarity;
@@ -159,7 +195,6 @@ function renderPreview(card) {
 
 function renderBackEditor() {
   document.getElementById('field-back-color').value = cardBack.color;
-  document.getElementById('field-back-text').value = cardBack.text || '';
 
   const backArea = document.getElementById('back-upload-area');
   const removeBackBtn = document.getElementById('btn-remove-back');
@@ -233,10 +268,10 @@ function renderCardFrontHTML(card) {
 }
 
 function renderCardBackHTML() {
-  if (cardBack.image) {
-    return `<div class="card-back-inner" style="background:${cardBack.color}"><img src="${cardBack.image}" alt="Card back"></div>`;
-  }
-  return `<div class="card-back-inner" style="background:${cardBack.color}">${escapeHtml(cardBack.text || '')}</div>`;
+  const inner = cardBack.image
+    ? `<img src="${cardBack.image}" alt="Card back">`
+    : '';
+  return `<div class="card-back-inner" style="background:${cardBack.color}">${inner}</div>`;
 }
 
 function updateField(field, value) {
@@ -260,6 +295,7 @@ function updatePower(index, prop, value) {
 function updateBack(field, value) {
   cardBack[field] = value;
   renderBackPreview();
+  renderCardList();
   saveBack();
 }
 
@@ -285,6 +321,7 @@ function handleBackImageUpload(input) {
     cardBack.image = e.target.result;
     renderBackEditor();
     renderBackPreview();
+    renderCardList();
     saveBack();
   };
   reader.readAsDataURL(file);
@@ -302,6 +339,7 @@ function removeBackImage() {
   cardBack.image = null;
   renderBackEditor();
   renderBackPreview();
+  renderCardList();
   saveBack();
 }
 
@@ -457,6 +495,7 @@ function setupDragDrop() {
     cardBack.image = result;
     renderBackEditor();
     renderBackPreview();
+    renderCardList();
     saveBack();
   });
 }

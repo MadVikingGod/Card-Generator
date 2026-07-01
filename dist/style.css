@@ -458,22 +458,18 @@ main {
   margin: 0;
 }
 
-#shared-back-editor {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-}
-
-#shared-back-editor h2 {
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-
-#shared-back-editor .hint {
-  font-size: 0.75rem;
+#back-editor .hint {
+  font-size: 0.8rem;
   color: var(--text-muted);
   margin-bottom: 0.75rem;
+}
+
+/* Special "Card Back" entry in the card list */
+.card-list-item.back-item {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  border-radius: 6px 6px 0 0;
 }
 
 .editor-actions {
