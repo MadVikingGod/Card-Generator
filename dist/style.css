@@ -350,14 +350,16 @@ main {
   font-size: 0.9rem;
 }
 
-#card-editor fieldset {
+#card-editor fieldset,
+#back-editor fieldset {
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0.75rem;
   margin-bottom: 0.75rem;
 }
 
-#card-editor legend {
+#card-editor legend,
+#back-editor legend {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -366,7 +368,8 @@ main {
   padding: 0 0.25rem;
 }
 
-#card-editor label {
+#card-editor label,
+#back-editor label {
   display: block;
   font-size: 0.8rem;
   margin-bottom: 0.5rem;
@@ -375,7 +378,10 @@ main {
 
 #card-editor input[type="text"],
 #card-editor input[type="number"],
-#card-editor select {
+#card-editor select,
+#back-editor input[type="text"],
+#back-editor input[type="number"],
+#back-editor select {
   display: block;
   width: 100%;
   padding: 0.4rem 0.5rem;
@@ -387,7 +393,8 @@ main {
   font-size: 0.85rem;
 }
 
-#card-editor input[type="color"] {
+#card-editor input[type="color"],
+#back-editor input[type="color"] {
   display: block;
   width: 100%;
   height: 32px;
