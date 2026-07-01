@@ -38,7 +38,7 @@ function saveCards() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
   } catch (e) {
     console.warn('Storage full, saving without images');
-    const lite = cards.map(c => ({ ...c, image: null }));
+    const lite = cards.map((c) => ({ ...c, image: null }));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lite));
   }
 }
@@ -57,8 +57,14 @@ function loadCards() {
     const data = localStorage.getItem(STORAGE_KEY);
     if (data) {
       cards = JSON.parse(data);
-      cards.forEach(c => {
-        if (!c.powers) c.powers = [{ name: '', value: 0 }, { name: '', value: 0 }, { name: '', value: 0 }, { name: '', value: 0 }];
+      cards.forEach((c) => {
+        if (!c.powers)
+          c.powers = [
+            { name: '', value: 0 },
+            { name: '', value: 0 },
+            { name: '', value: 0 },
+            { name: '', value: 0 },
+          ];
         // Migrate legacy "help" field to "health"
         if (c.health === undefined) c.health = c.help !== undefined ? c.help : 100;
         delete c.help;
@@ -79,14 +85,18 @@ function loadBack() {
       return;
     }
     // Migrate: seed the shared back from the first legacy card that had one.
-    const legacy = cards.find(c => c.backImage || c.backColor);
+    const legacy = cards.find((c) => c.backImage || c.backColor);
     if (legacy) {
       cardBack = {
         image: legacy.backImage || null,
         color: legacy.backColor || '#1e3a5f',
       };
     }
-    cards.forEach(c => { delete c.backImage; delete c.backColor; delete c.backText; });
+    cards.forEach((c) => {
+      delete c.backImage;
+      delete c.backColor;
+      delete c.backText;
+    });
   } catch (e) {
     console.warn('Failed to load card back', e);
   }
@@ -112,7 +122,7 @@ function renderCardList() {
   `;
   list.appendChild(backItem);
 
-  cards.forEach(card => {
+  cards.forEach((card) => {
     const item = document.createElement('div');
     item.className = 'card-list-item' + (card.id === selectedCardId ? ' active' : '');
     item.onclick = () => selectCard(card.id);
@@ -149,7 +159,7 @@ function selectBack() {
 function selectCard(id) {
   selectedCardId = id;
   renderCardList();
-  const card = cards.find(c => c.id === id);
+  const card = cards.find((c) => c.id === id);
   if (!card) return;
 
   document.getElementById('editor-empty').style.display = 'none';
@@ -180,7 +190,8 @@ function selectCard(id) {
     uploadArea.classList.add('has-image');
     removeBtn.style.display = '';
   } else {
-    uploadArea.innerHTML = '<input type="file" id="field-image" accept="image/*" onchange="handleImageUpload(this)" hidden><p>Click or drag an image here</p>';
+    uploadArea.innerHTML =
+      '<input type="file" id="field-image" accept="image/*" onchange="handleImageUpload(this)" hidden><p>Click or drag an image here</p>';
     uploadArea.classList.remove('has-image');
     removeBtn.style.display = 'none';
   }
@@ -203,7 +214,8 @@ function renderBackEditor() {
     backArea.classList.add('has-image');
     removeBackBtn.style.display = '';
   } else {
-    backArea.innerHTML = '<input type="file" id="field-back-image" accept="image/*" onchange="handleBackImageUpload(this)" hidden><p>Click or drag a back image here</p>';
+    backArea.innerHTML =
+      '<input type="file" id="field-back-image" accept="image/*" onchange="handleBackImageUpload(this)" hidden><p>Click or drag a back image here</p>';
     backArea.classList.remove('has-image');
     removeBackBtn.style.display = 'none';
   }
@@ -229,10 +241,12 @@ function renderCardFrontHTML(card) {
 
   // Only show powers that have been filled in (a name or a non-zero value).
   const powersHTML = card.powers
-    .filter(p => (p.name && p.name.trim()) || (p.value && p.value > 0))
-    .map(p =>
-      `<div class="power-row"><span class="power-name">${escapeHtml(p.name || '')}</span><span class="power-value">${p.value || 0}</span></div>`
-    ).join('');
+    .filter((p) => (p.name && p.name.trim()) || (p.value && p.value > 0))
+    .map(
+      (p) =>
+        `<div class="power-row"><span class="power-name">${escapeHtml(p.name || '')}</span><span class="power-value">${p.value || 0}</span></div>`,
+    )
+    .join('');
 
   return `
     <div class="card-inner" style="background:${hexToGradient(card.color)}">
@@ -268,14 +282,12 @@ function renderCardFrontHTML(card) {
 }
 
 function renderCardBackHTML() {
-  const inner = cardBack.image
-    ? `<img src="${cardBack.image}" alt="Card back">`
-    : '';
+  const inner = cardBack.image ? `<img src="${cardBack.image}" alt="Card back">` : '';
   return `<div class="card-back-inner" style="background:${cardBack.color}">${inner}</div>`;
 }
 
 function updateField(field, value) {
-  const card = cards.find(c => c.id === selectedCardId);
+  const card = cards.find((c) => c.id === selectedCardId);
   if (!card) return;
   card[field] = value;
   renderPreview(card);
@@ -284,7 +296,7 @@ function updateField(field, value) {
 }
 
 function updatePower(index, prop, value) {
-  const card = cards.find(c => c.id === selectedCardId);
+  const card = cards.find((c) => c.id === selectedCardId);
   if (!card) return;
   if (prop === 'value') value = parseInt(value) || 0;
   card.powers[index][prop] = value;
@@ -304,7 +316,7 @@ function handleImageUpload(input) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    const card = cards.find(c => c.id === selectedCardId);
+    const card = cards.find((c) => c.id === selectedCardId);
     if (!card) return;
     card.image = e.target.result;
     selectCard(card.id);
@@ -328,7 +340,7 @@ function handleBackImageUpload(input) {
 }
 
 function removeImage() {
-  const card = cards.find(c => c.id === selectedCardId);
+  const card = cards.find((c) => c.id === selectedCardId);
   if (!card) return;
   card.image = null;
   selectCard(card.id);
@@ -352,7 +364,7 @@ function addCard() {
 
 function deleteCurrentCard() {
   if (!selectedCardId) return;
-  cards = cards.filter(c => c.id !== selectedCardId);
+  cards = cards.filter((c) => c.id !== selectedCardId);
   selectedCardId = cards.length > 0 ? cards[0].id : null;
   saveCards();
   renderCardList();
@@ -380,9 +392,14 @@ function deleteCurrentCard() {
 }
 
 function duplicateCurrentCard() {
-  const card = cards.find(c => c.id === selectedCardId);
+  const card = cards.find((c) => c.id === selectedCardId);
   if (!card) return;
-  const dup = { ...card, id: generateId(), name: card.name + ' (copy)', powers: card.powers.map(p => ({ ...p })) };
+  const dup = {
+    ...card,
+    id: generateId(),
+    name: card.name + ' (copy)',
+    powers: card.powers.map((p) => ({ ...p })),
+  };
   cards.push(dup);
   saveCards();
   selectCard(dup.id);
@@ -391,7 +408,7 @@ function duplicateCurrentCard() {
 // Print view
 function openPrintView() {
   const expandedCards = [];
-  cards.forEach(card => {
+  cards.forEach((card) => {
     for (let i = 0; i < (card.copies || 1); i++) {
       expandedCards.push(card);
     }
@@ -415,7 +432,7 @@ function openPrintView() {
     // Front page
     const frontPage = document.createElement('div');
     frontPage.className = 'print-page front-page';
-    pageCards.forEach(card => {
+    pageCards.forEach((card) => {
       const cardEl = document.createElement('div');
       cardEl.className = 'card-face card-front';
       cardEl.innerHTML = renderCardFrontHTML(card);
@@ -437,7 +454,7 @@ function openPrintView() {
     backPage.className = 'print-page back-page';
 
     const reorderedBacks = reorderForBacks(pageCards, cardsPerPage);
-    reorderedBacks.forEach(card => {
+    reorderedBacks.forEach((card) => {
       const cardEl = document.createElement('div');
       cardEl.className = 'card-face card-back';
       if (card) {
@@ -483,7 +500,7 @@ function closePrintView() {
 function setupDragDrop() {
   const imgArea = document.getElementById('image-upload-area');
   attachDrop(imgArea, (result) => {
-    const card = cards.find(c => c.id === selectedCardId);
+    const card = cards.find((c) => c.id === selectedCardId);
     if (!card) return;
     card.image = result;
     selectCard(card.id);
