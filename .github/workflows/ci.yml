@@ -5,20 +5,44 @@ on:
     branches: [main]
   pull_request:
 
+# The default token needs nothing beyond reading the repo. Declaring this
+# explicitly means a repo-wide default of "read and write" can't silently
+# grant this workflow more than it needs.
+permissions:
+  contents: read
+
+# Superseded runs on the same ref are pointless work; cancelling them also
+# caps how much runner time a rapid series of pushes can consume.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-and-format:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      # Actions are pinned to commit SHAs: a tag like v4 is mutable and can be
+      # repointed at different code by whoever controls the action's repo.
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # Don't leave the job's credentials in .git/config where any later
+          # step (or dependency) could pick them up.
+          persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
           cache: npm
 
+      # --ignore-scripts blocks install lifecycle hooks. Without it, a pull
+      # request that edits package.json or package-lock.json runs arbitrary
+      # code on the runner before any of our own checks do. ESLint and
+      # Prettier don't need install scripts to work.
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Lint (ESLint)
         run: npm run lint

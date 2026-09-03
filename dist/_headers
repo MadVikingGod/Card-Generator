@@ -1,0 +1,14 @@
+# Cloudflare Pages reads this file and sends these headers with every response.
+# The app is entirely self-contained — no network calls, no external scripts,
+# fonts, or images — so it can be locked down tightly.
+/*
+  # 'unsafe-inline' is required for script-src because the markup wires up
+  # inline onclick/oninput handlers, and for style-src because cards are
+  # coloured with inline style attributes. The rest of the policy is what
+  # limits the damage if something ever does get injected: connect-src 'none'
+  # means injected code has no way to send a user's cards anywhere.
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin

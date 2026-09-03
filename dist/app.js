@@ -56,15 +56,17 @@ function loadCards() {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (data) {
-      cards = JSON.parse(data);
+      const parsed = JSON.parse(data);
+      // Stored JSON can be any shape at all (hand-edited, corrupted, or written
+      // by an older version), so check it rather than indexing into it blindly.
+      cards = Array.isArray(parsed) ? parsed.filter((c) => c && typeof c === 'object') : [];
       cards.forEach((c) => {
-        if (!c.powers)
-          c.powers = [
-            { name: '', value: 0 },
-            { name: '', value: 0 },
-            { name: '', value: 0 },
-            { name: '', value: 0 },
-          ];
+        if (!Array.isArray(c.powers)) c.powers = [];
+        c.powers = c.powers.slice(0, 4).map((p) => ({
+          name: p && typeof p.name === 'string' ? p.name : '',
+          value: safeNumber(p && p.value, 0),
+        }));
+        while (c.powers.length < 4) c.powers.push({ name: '', value: 0 });
         // Migrate legacy "help" field to "health"
         if (c.health === undefined) c.health = c.help !== undefined ? c.help : 100;
         delete c.help;
@@ -80,8 +82,11 @@ function loadBack() {
   try {
     const data = localStorage.getItem(BACK_STORAGE_KEY);
     if (data) {
-      cardBack = JSON.parse(data);
-      delete cardBack.text; // drop legacy back text
+      const parsed = JSON.parse(data);
+      if (parsed && typeof parsed === 'object') {
+        cardBack = parsed;
+        delete cardBack.text; // drop legacy back text
+      }
       return;
     }
     // Migrate: seed the shared back from the first legacy card that had one.
@@ -110,9 +115,10 @@ function renderCardList() {
   const backItem = document.createElement('div');
   backItem.className = 'card-list-item back-item' + (selectedCardId === BACK_ID ? ' active' : '');
   backItem.onclick = () => selectBack();
-  const backSwatch = cardBack.image
-    ? `background-image:url(${cardBack.image});background-size:cover;background-position:center`
-    : `background:${cardBack.color}`;
+  const backSwatchImage = safeImageSrc(cardBack.image);
+  const backSwatch = backSwatchImage
+    ? `background-image:url(${backSwatchImage});background-size:cover;background-position:center`
+    : `background:${safeColor(cardBack.color, '#1e3a5f')}`;
   backItem.innerHTML = `
     <div class="card-swatch" style="${backSwatch}"></div>
     <div class="card-list-info">
@@ -127,10 +133,10 @@ function renderCardList() {
     item.className = 'card-list-item' + (card.id === selectedCardId ? ' active' : '');
     item.onclick = () => selectCard(card.id);
     item.innerHTML = `
-      <div class="card-swatch" style="background:${card.color}"></div>
+      <div class="card-swatch" style="background:${safeColor(card.color, '#3b82f6')}"></div>
       <div class="card-list-info">
         <div class="card-list-name">${escapeHtml(card.name || 'Untitled')}</div>
-        <div class="card-list-meta">${card.rarity} &middot; ${card.copies}x</div>
+        <div class="card-list-meta">${escapeHtml(card.rarity || '')} &middot; ${safeNumber(card.copies, 1)}x</div>
       </div>
     `;
     list.appendChild(item);
@@ -141,6 +147,28 @@ function escapeHtml(str) {
   const d = document.createElement('div');
   d.textContent = str;
   return d.innerHTML;
+}
+
+// Cards are re-read from localStorage on every visit, so the form controls are
+// not the last word on what a value looks like by the time it reaches the
+// markup below. Values landing in an attribute are checked against the shape
+// they are supposed to have rather than trusted.
+
+// Uploads are stored by FileReader as base64 data URLs; anything else (a
+// javascript: URL, a remote tracker) is dropped.
+function safeImageSrc(src) {
+  return typeof src === 'string' && /^data:image\/[a-z0-9.+-]+;base64,[a-z0-9+/=]*$/i.test(src)
+    ? src
+    : null;
+}
+
+function safeColor(color, fallback) {
+  return typeof color === 'string' && /^#[0-9a-f]{6}$/i.test(color) ? color : fallback;
+}
+
+function safeNumber(value, fallback) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
 }
 
 function selectBack() {
@@ -172,7 +200,7 @@ function selectCard(id) {
   document.getElementById('field-name').value = card.name;
   document.getElementById('field-rarity').value = card.rarity;
   document.getElementById('field-type').value = card.type;
-  document.getElementById('field-color').value = card.color;
+  document.getElementById('field-color').value = safeColor(card.color, '#3b82f6');
   document.getElementById('field-weakness').value = card.weakness;
   document.getElementById('field-strength').value = card.strength;
   document.getElementById('field-health').value = card.health;
@@ -185,8 +213,9 @@ function selectCard(id) {
 
   const uploadArea = document.getElementById('image-upload-area');
   const removeBtn = document.getElementById('btn-remove-image');
-  if (card.image) {
-    uploadArea.innerHTML = `<input type="file" id="field-image" accept="image/*" onchange="handleImageUpload(this)" hidden><img src="${card.image}" alt="Card image">`;
+  const cardImage = safeImageSrc(card.image);
+  if (cardImage) {
+    uploadArea.innerHTML = `<input type="file" id="field-image" accept="image/*" onchange="handleImageUpload(this)" hidden><img src="${cardImage}" alt="Card image">`;
     uploadArea.classList.add('has-image');
     removeBtn.style.display = '';
   } else {
@@ -205,12 +234,13 @@ function renderPreview(card) {
 }
 
 function renderBackEditor() {
-  document.getElementById('field-back-color').value = cardBack.color;
+  document.getElementById('field-back-color').value = safeColor(cardBack.color, '#1e3a5f');
 
   const backArea = document.getElementById('back-upload-area');
   const removeBackBtn = document.getElementById('btn-remove-back');
-  if (cardBack.image) {
-    backArea.innerHTML = `<input type="file" id="field-back-image" accept="image/*" onchange="handleBackImageUpload(this)" hidden><img src="${cardBack.image}" alt="Back image">`;
+  const backImage = safeImageSrc(cardBack.image);
+  if (backImage) {
+    backArea.innerHTML = `<input type="file" id="field-back-image" accept="image/*" onchange="handleBackImageUpload(this)" hidden><img src="${backImage}" alt="Back image">`;
     backArea.classList.add('has-image');
     removeBackBtn.style.display = '';
   } else {
@@ -235,8 +265,9 @@ function hexToGradient(hex) {
 }
 
 function renderCardFrontHTML(card) {
-  const imageContent = card.image
-    ? `<img src="${card.image}" alt="${escapeHtml(card.name)}">`
+  const cardImage = safeImageSrc(card.image);
+  const imageContent = cardImage
+    ? `<img src="${cardImage}" alt="${escapeHtml(card.name || '')}">`
     : '<span class="placeholder-text">No Image</span>';
 
   // Only show powers that have been filled in (a name or a non-zero value).
@@ -244,15 +275,15 @@ function renderCardFrontHTML(card) {
     .filter((p) => (p.name && p.name.trim()) || (p.value && p.value > 0))
     .map(
       (p) =>
-        `<div class="power-row"><span class="power-name">${escapeHtml(p.name || '')}</span><span class="power-value">${p.value || 0}</span></div>`,
+        `<div class="power-row"><span class="power-name">${escapeHtml(p.name || '')}</span><span class="power-value">${safeNumber(p.value, 0)}</span></div>`,
     )
     .join('');
 
   return `
-    <div class="card-inner" style="background:${hexToGradient(card.color)}">
+    <div class="card-inner" style="background:${hexToGradient(safeColor(card.color, '#3b82f6'))}">
       <div class="card-header-bar">
         <span class="card-name-display">${escapeHtml(card.name || 'Untitled')}</span>
-        <span class="card-rarity-display" data-rarity="${card.rarity}">${card.rarity}</span>
+        <span class="card-rarity-display" data-rarity="${escapeHtml(card.rarity || '')}">${escapeHtml(card.rarity || '')}</span>
       </div>
       <div class="card-image-area">
         ${imageContent}
@@ -274,7 +305,7 @@ function renderCardFrontHTML(card) {
         </div>
         <div class="stat-row help-row">
           <span class="stat-label">Health:</span>
-          <span>${card.health || 100}</span>
+          <span>${safeNumber(card.health, 100)}</span>
         </div>
       </div>
     </div>
@@ -282,8 +313,9 @@ function renderCardFrontHTML(card) {
 }
 
 function renderCardBackHTML() {
-  const inner = cardBack.image ? `<img src="${cardBack.image}" alt="Card back">` : '';
-  return `<div class="card-back-inner" style="background:${cardBack.color}">${inner}</div>`;
+  const backImage = safeImageSrc(cardBack.image);
+  const inner = backImage ? `<img src="${backImage}" alt="Card back">` : '';
+  return `<div class="card-back-inner" style="background:${safeColor(cardBack.color, '#1e3a5f')}">${inner}</div>`;
 }
 
 function updateField(field, value) {
