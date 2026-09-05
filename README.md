@@ -33,3 +33,7 @@ Linting and formatting are enforced in CI via
 1. Push this repo to GitHub
 2. In the Cloudflare dashboard, create a new Pages project linked to the repo
 3. No build step needed — set the output directory to `dist`
+
+## License
+
+BSD 2-Clause. See [LICENSE](LICENSE).
